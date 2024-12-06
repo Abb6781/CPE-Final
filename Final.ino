@@ -3,22 +3,35 @@
 
 //copied from arduino, working, but needs to be changed so that
 //Displays to LCD instead of serial monitor
+
+//press and hold button to rotate stepper motor to desired angle.
+
+//includes for temp/humidity
 #include "DHT.h"
 #define DHTPIN 2
-
 #define DHTTYPE DHT11
-
 DHT dht(DHTPIN, DHTTYPE);
-void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(9600);
-  Serial.println(F("DHTxx test!"));
 
+//includes for stepper motor
+#include <Stepper.h>
+#define STEPS 100
+Stepper stepper(STEPS, 8, 9, 10, 11);
+
+
+void setup() {
+  // humidity/temp reader
+  Serial.begin(9600);
   dht.begin();
+
+  //stepper motor
+  stepper.setSpeed(30);
+  
+  //fan motor, change before submitting
+  pinMode(5, OUTPUT);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  // humidity/temp
   delay(2000);
 
   float h = dht.readHumidity();
@@ -43,4 +56,13 @@ void loop() {
   Serial.print(F("C "));
   Serial.print(hif);
   Serial.println(F("F"));
+  //turn on/off fan motor when temperature changes (change values)
+  //change digital write before submitting
+  if(t < 70 && t>60){
+    digitalWrite(5, HIGH);
+  }else{
+    digitalWrite(5, LOW);
+  }
+  //stepper motor
+  stepper.step(150);
 }
