@@ -17,6 +17,11 @@ DHT dht(DHTPIN, DHTTYPE);
 #define STEPS 100
 Stepper stepper(STEPS, 8, 9, 10, 11);
 
+//includes for water sensor 
+#define POWER_PIN  7
+#define SIGNAL_PIN A5
+
+int value = 0; // variable to store the sensor value
 
 void setup() {
   // humidity/temp reader
@@ -28,6 +33,10 @@ void setup() {
   
   //fan motor, change before submitting
   pinMode(5, OUTPUT);
+
+  //water sensor, change
+  pinMode(POWER_PIN, OUTPUT);   // configure D7 pin as an OUTPUT
+  digitalWrite(POWER_PIN, LOW); // turn the sensor OFF
 }
 
 void loop() {
@@ -65,4 +74,14 @@ void loop() {
   }
   //stepper motor
   stepper.step(150);
+
+  //water sensor
+  digitalWrite(POWER_PIN, HIGH);  // turn the sensor ON
+  delay(10);                      // wait 10 milliseconds
+  value = analogRead(SIGNAL_PIN); // read the analog value from sensor
+  digitalWrite(POWER_PIN, LOW);   // turn the sensor OFF
+  if(value < 100){
+    //change to error state
+  }
+
 }
