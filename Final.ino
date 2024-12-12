@@ -23,6 +23,13 @@ Stepper stepper(STEPS, 8, 9, 10, 11);
 
 int value = 0; // variable to store the sensor value
 
+//includes for the clock
+#include <RTClib.h>
+RTC_DS3231 rtc;
+volatile int count = 0;
+char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+bool lastState = false;
+
 void setup() {
   // humidity/temp reader
   Serial.begin(9600);
@@ -37,6 +44,11 @@ void setup() {
   //water sensor, change
   pinMode(POWER_PIN, OUTPUT);   // configure D7 pin as an OUTPUT
   digitalWrite(POWER_PIN, LOW); // turn the sensor OFF
+  
+  //Clock
+  rtc.begin();
+  customPutchar('\n');
+  attachInterrupt(digitalPinToInterrupt(2), cStep, RISING);
 }
 
 void loop() {
@@ -84,4 +96,62 @@ void loop() {
     //change to error state
   }
 
+  //Clock
+  DateTime now = rtc.now(); // Get current time
+
+  bool currentState = ((count / 2) % 2 == 0); // Determine the current state (ON or OFF)
+  if (currentState != lastState) {  // If the state has changed
+    if (currentState) {
+      printString("MOTOR OFF @");
+    } else {
+      printString("MOTOR ON @");
+    }
+    customPutchar('\n');
+    printNumber(now.year());
+    customPutchar('/');
+    printNumber(now.month());
+    customPutchar('/');
+    printNumber(now.day());
+    customPutchar(' ');
+    customPutchar('(');
+    printString(daysOfTheWeek[now.dayOfTheWeek()]);
+    customPutchar(')');
+    customPutchar(' ');
+    printNumber(now.hour());
+    customPutchar(':');
+    printNumber(now.minute());
+    customPutchar(':');
+    printNumber(now.second());
+    customPutchar('\n');
+  
+    lastState = currentState;    // Update the last state to the current state
+  }
+  
+
+}
+
+void cStep() { // counts every time pin 2 is RISING
+  count++;
+}
+
+// Custom function to replace putchar() with Serial.write()
+void customPutchar(char c) {
+  Serial.write(c);  // Send character to Serial Monitor
+}
+
+// Print number as a string of digits
+void printNumber(int num) {
+  if (num < 10) {
+    customPutchar('0'); 
+  } 
+  String numStr = String(num);// Convert the number to a string and print each character
+  for (int i = 0; i < numStr.length(); i++) {
+    customPutchar(numStr[i]);
+  }
+}
+
+void printString(const char* str) {
+  while (*str) {
+    customPutchar(*str++);
+  }
 }
