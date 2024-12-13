@@ -79,10 +79,10 @@ void loop() {
   Serial.println(F("F"));
   //turn on/off fan motor when temperature changes (change values)
   //change digital write before submitting
-  if(t < 70 && t>60){
-    digitalWrite(5, HIGH);
-  }else{
+  if(f < 78 && f>70){
     digitalWrite(5, LOW);
+  }else{
+    digitalWrite(5, HIGH);
   }
   //stepper motor
   stepper.step(150);
