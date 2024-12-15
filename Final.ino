@@ -2,7 +2,7 @@
 //December 14, 2024
 
 //copied from arduino, working, but needs to be changed so that
-//Displays to LCD instead of serial monitor
+// it doesnt use libraries
 
 //press and hold button to rotate stepper motor to desired angle.
 
@@ -30,7 +30,22 @@ volatile int count = 0;
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 bool lastState = false;
 
+//includes for interrupt
+const byte ledPin = 3;
+const byte interruptPin = 4;
+volatile byte state = LOW;
+
+//includes for LCD
+#include <LiquidCrystal.h>
+const int RS = 22, EN = 24, D4 = 26, D5 = 28, D6 = 30, D7 = 32;
+LiquidCrystal lcd(RS,EN,D4,D5,D6,D7);
 void setup() {
+  Serial.begin(9600);
+  //interrupt
+  pinMode(ledPin, OUTPUT);
+  pinMode(interruptPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(interruptPin),blink, CHANGE);
+
   // humidity/temp reader
   Serial.begin(9600);
   dht.begin();
@@ -48,16 +63,39 @@ void setup() {
   //Clock
   rtc.begin();
   customPutchar('\n');
-  attachInterrupt(digitalPinToInterrupt(2), cStep, RISING);
+  attachInterrupt(digitalPinToInterrupt(6), cStep, RISING);
+
+  //leds 
+  pinMode(12, OUTPUT); //green
+  pinMode(13, OUTPUT); //red
+  //blue connected to pin 5. (only on when fan is on)
+  //yellow connected to 3 (see interrupt)
 }
 
 void loop() {
+  //interrupt
+  bool d = digitalRead(4);
+  Serial.println(d);
+  digitalWrite(ledPin, state);
+  //water sensor
+  digitalWrite(POWER_PIN, HIGH);  // turn the sensor ON
+  delay(10);                      // wait 10 milliseconds
+  value = analogRead(SIGNAL_PIN); // read the analog value from sensor
+  digitalWrite(POWER_PIN, LOW);   // turn the sensor OFF
+  Serial.println(value);
+  if (value > 220 ){
+    digitalWrite(13, HIGH);
+    digitalWrite(12, LOW);
+    lcd.write("ERROR, LOW WATER");
+  }else{
+    digitalWrite(13, LOW);
+    digitalWrite(12, HIGH);
+  }
   // humidity/temp
-  delay(2000);
 
-  float h = dht.readHumidity();
+  int h = dht.readHumidity();
   float t = dht.readTemperature();
-  float f = dht.readTemperature(true);
+  int f = dht.readTemperature(true);
 
   if(isnan(h) || isnan(t) || isnan(f)) {
     Serial.println(F("Failed to read from DHT sensor!"));
@@ -65,37 +103,37 @@ void loop() {
   }
   float hif = dht.computeHeatIndex(f,h);
   float hic = dht.computeHeatIndex(t,h, false);
-
-  Serial.print(F("Humidity: "));
-  Serial.print(h);
-  Serial.print(F("% Termperature: "));
-  Serial.print(t);
-  Serial.print(F(" C "));
-  Serial.print(f);
-  Serial.print(F("F Heat index:"));
-  Serial.print(hic);
-  Serial.print(F("C "));
-  Serial.print(hif);
-  Serial.println(F("F"));
+  if(value <= 220){
+    /*Serial.print(F("Humidity: "));
+    Serial.print(h);
+    Serial.print(F("% Temperature: "));
+    Serial.print(t);
+    Serial.print(F(" C "));
+    Serial.print(f);
+    Serial.print(F("F Heat index:"));
+    Serial.print(hic);
+    Serial.print(F("C "));
+    Serial.print(hif);
+    Serial.println(F("F"));
+    */
+    lcd.print("temp:");
+    lcd.print(f);
+    lcd.print(" humid:");
+    lcd.print(h);
+  }
   //turn on/off fan motor when temperature changes (change values)
   //change digital write before submitting
-  if(f < 78 && f>70){
+  if((f < 75 && f>50) && (value < 220)){
     digitalWrite(5, LOW);
-  }else{
+    digitalWrite(12, HIGH);
+  }else if (value <220){
     digitalWrite(5, HIGH);
+    digitalWrite(12, LOW);
   }
   //stepper motor
-  stepper.step(150);
-
-  //water sensor
-  digitalWrite(POWER_PIN, HIGH);  // turn the sensor ON
-  delay(10);                      // wait 10 milliseconds
-  value = analogRead(SIGNAL_PIN); // read the analog value from sensor
-  digitalWrite(POWER_PIN, LOW);   // turn the sensor OFF
-  if(value < 100){
-    //change to error state
+  if(value < 220){
+    stepper.step(150);
   }
-
   //Clock
   DateTime now = rtc.now(); // Get current time
 
@@ -129,7 +167,9 @@ void loop() {
   
 
 }
-
+void blink(){
+  state = !state;
+}
 void cStep() { // counts every time pin 2 is RISING
   count++;
 }
