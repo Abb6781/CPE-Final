@@ -1,8 +1,7 @@
 //Abigail Barnes & Kevin Lopez De Dios
-//December 14, 2024
+//December 15, 2024
 
-//copied from arduino, working, but needs to be changed so that
-// it doesnt use libraries
+//copied from arduino, working
 
 //press and hold button to rotate stepper motor to desired angle.
 
@@ -11,6 +10,9 @@
 #define DHTPIN 2
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
+
+unsigned long previousMillis = 0;
+const long interval = 60000;
 
 //includes for stepper motor
 #include <Stepper.h>
@@ -47,7 +49,6 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(interruptPin),blink, CHANGE);
 
   // humidity/temp reader
-  Serial.begin(9600);
   dht.begin();
 
   //stepper motor
@@ -59,6 +60,7 @@ void setup() {
   //water sensor, change
   pinMode(POWER_PIN, OUTPUT);   // configure D7 pin as an OUTPUT
   digitalWrite(POWER_PIN, LOW); // turn the sensor OFF
+  pinMode(34, INPUT);
   
   //Clock
   rtc.begin();
@@ -79,8 +81,10 @@ void loop() {
   digitalWrite(ledPin, state);
   //water sensor
   digitalWrite(POWER_PIN, HIGH);  // turn the sensor ON
-  delay(10);                      // wait 10 milliseconds
-  value = analogRead(SIGNAL_PIN); // read the analog value from sensor
+  delay(10); 
+  if(digitalRead(34)){
+    value = analogRead(SIGNAL_PIN);
+  } // read the analog value from sensor
   digitalWrite(POWER_PIN, LOW);   // turn the sensor OFF
   Serial.println(value);
   if (value > 220 ){
@@ -92,43 +96,28 @@ void loop() {
     digitalWrite(12, HIGH);
   }
   // humidity/temp
+  unsigned long currentMillis = millis();
 
-  int h = dht.readHumidity();
-  float t = dht.readTemperature();
-  int f = dht.readTemperature(true);
-
-  if(isnan(h) || isnan(t) || isnan(f)) {
-    Serial.println(F("Failed to read from DHT sensor!"));
-    return;
-  }
-  float hif = dht.computeHeatIndex(f,h);
-  float hic = dht.computeHeatIndex(t,h, false);
-  if(value <= 220){
-    /*Serial.print(F("Humidity: "));
-    Serial.print(h);
-    Serial.print(F("% Temperature: "));
-    Serial.print(t);
-    Serial.print(F(" C "));
-    Serial.print(f);
-    Serial.print(F("F Heat index:"));
-    Serial.print(hic);
-    Serial.print(F("C "));
-    Serial.print(hif);
-    Serial.println(F("F"));
-    */
-    lcd.print("temp:");
-    lcd.print(f);
-    lcd.print(" humid:");
-    lcd.print(h);
-  }
-  //turn on/off fan motor when temperature changes (change values)
-  //change digital write before submitting
-  if((f < 75 && f>50) && (value < 220)){
-    digitalWrite(5, LOW);
-    digitalWrite(12, HIGH);
-  }else if (value <220){
-    digitalWrite(5, HIGH);
-    digitalWrite(12, LOW);
+  if(currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    int h = dht.readHumidity();
+    int f = dht.readTemperature(true);
+    if(value <= 220){
+      lcd.print("temp:");
+      lcd.print(f);
+      lcd.print(" humid:");
+      lcd.print(h);
+    }
+  
+    //turn on/off fan motor when temperature changes (change values)
+    //change digital write before submitting
+    if((f < 75 && f>50) && (value < 220)){
+      digitalWrite(5, LOW);
+      digitalWrite(12, HIGH);
+    }else if (value <220){
+      digitalWrite(5, HIGH);
+      digitalWrite(12, LOW);
+    }
   }
   //stepper motor
   if(value < 220){
