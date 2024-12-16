@@ -5,7 +5,7 @@
 
 //press and hold button to rotate stepper motor to desired angle.
 
-//includes for temp/humidity
+//includes for temp/humidity. libraries included are allowed
 #include "DHT.h"
 #define DHTPIN 2
 #define DHTTYPE DHT11
@@ -14,7 +14,7 @@ DHT dht(DHTPIN, DHTTYPE);
 unsigned long previousMillis = 0;
 const long interval = 60000;
 
-//includes for stepper motor
+//includes for stepper motor. libraries are allowed
 #include <Stepper.h>
 #define STEPS 100
 Stepper stepper(STEPS, 8, 9, 10, 11);
@@ -25,7 +25,7 @@ Stepper stepper(STEPS, 8, 9, 10, 11);
 
 int value = 0; // variable to store the sensor value
 
-//includes for the clock
+//includes for the clock. libraries allowed
 #include <RTClib.h>
 RTC_DS3231 rtc;
 volatile int count = 0;
@@ -37,7 +37,7 @@ const byte ledPin = 3;
 const byte interruptPin = 4;
 volatile byte state = LOW;
 
-//includes for LCD
+//includes for LCD. libraries used in prior lab
 #include <LiquidCrystal.h>
 const int RS = 22, EN = 24, D4 = 26, D5 = 28, D6 = 30, D7 = 32;
 LiquidCrystal lcd(RS,EN,D4,D5,D6,D7);
@@ -77,7 +77,6 @@ volatile unsigned char* pin_32 = (unsigned char*) 0x2B;
 volatile unsigned char* pin_34 = (unsigned char*) 0x2C;
 
 void setup() {
-  Serial.begin(9600);
   //interrupt
   *ledPin |= (1 << 3);
   *interruptPin |= (1 << 4);
@@ -114,13 +113,11 @@ void loop() {
   bool d = *pin_4 & (1 << 4);
   digitalWrite(ledPin, state);
   //water sensor
-  digitalWrite(POWER_PIN, HIGH);  // turn the sensor ON
-  delay(10); 
+  digitalWrite(POWER_PIN, HIGH);  // turn the sensor ON 
   if(*pin_34 & (1 << 6)){
     value = analogRead(SIGNAL_PIN);
   } // read the analog value from sensor
   digitalWrite(POWER_PIN, LOW);   // turn the sensor OFF
-  Serial.println(value);
   if (value > 220 ){
     digitalWrite(13, HIGH);
     digitalWrite(12, LOW);
@@ -144,7 +141,6 @@ void loop() {
     }
   
     //turn on/off fan motor when temperature changes (change values)
-    //change digital write before submitting
     if((f < 75 && f>50) && (value < 220)){
       analogWrite(5, 0);
       analogWrite(12, 255);
