@@ -112,11 +112,11 @@ void loop() {
     //turn on/off fan motor when temperature changes (change values)
     //change digital write before submitting
     if((f < 75 && f>50) && (value < 220)){
-      digitalWrite(5, LOW);
-      digitalWrite(12, HIGH);
+      analogWrite(5, 0);
+      analogWrite(12, 255);
     }else if (value <220){
-      digitalWrite(5, HIGH);
-      digitalWrite(12, LOW);
+      analogWrite(5, 255);
+      analogWrite(12, 0);
     }
   }
   //stepper motor
