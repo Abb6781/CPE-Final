@@ -38,7 +38,6 @@ const byte interruptPin = 4;
 volatile byte state = LOW;
 
 
-
 //includes for LCD, used in prior lab
 #include <LiquidCrystal.h>
 const int RS = 22, EN = 24, D4 = 26, D5 = 28, D6 = 30, D7 = 32;
@@ -203,7 +202,7 @@ void cStep() { // counts every time pin 2 is RISING
 
 // Custom function to replace putchar() with Serial.write()
 void customPutchar(char c) {
-  Serial.write(c);  // Send character to Serial Monitor
+  U0putChar(c);  // Send character to Serial Monitor
 }
 
 // Print number as a string of digits
