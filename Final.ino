@@ -5,7 +5,7 @@
 
 //press and hold button to rotate stepper motor to desired angle.
 
-//includes for temp/humidity
+//includes for temp/humidity, libraries allowed
 #include "DHT.h"
 #define DHTPIN 2
 #define DHTTYPE DHT11
@@ -14,7 +14,7 @@ DHT dht(DHTPIN, DHTTYPE);
 unsigned long previousMillis = 0;
 const long interval = 60000;
 
-//includes for stepper motor
+//includes for stepper motor, libraries allowed
 #include <Stepper.h>
 #define STEPS 100
 Stepper stepper(STEPS, 8, 9, 10, 11);
@@ -25,21 +25,21 @@ Stepper stepper(STEPS, 8, 9, 10, 11);
 
 int value = 0; // variable to store the sensor value
 
-//includes for the clock
+//includes for the clock, libraries allowed
 #include <RTClib.h>
 RTC_DS3231 rtc;
 volatile int count = 0;
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 bool lastState = false;
 
-//includes for interrupt
+//includes for interrupt, libraries allowed
 
 const byte interruptPin = 4;
 volatile byte state = LOW;
 
 
 
-//includes for LCD
+//includes for LCD, used in prior lab
 #include <LiquidCrystal.h>
 const int RS = 22, EN = 24, D4 = 26, D5 = 28, D6 = 30, D7 = 32;
 LiquidCrystal lcd(RS,EN,D4,D5,D6,D7);
@@ -79,7 +79,6 @@ volatile unsigned char* pin_32 = (unsigned char*) 0x2B;
 volatile unsigned char* pin_34 = (unsigned char*) 0x2C;
 
 void setup() {
-  Serial.begin(9600);
   //interrupt
   DDRD |= (1 << PD3); 
   *interruptPin |= (1 << 4);
@@ -91,10 +90,10 @@ void setup() {
   //stepper motor
   stepper.setSpeed(30);
   
-  //fan motor, change before submitting
+  //fan motor
   *pin_5 |= (1 << 5);
 
-  //water sensor, change
+  //water sensor
   DDRD |= (1 << PD4);// configure D7 pin as an OUTPUT
   PORTD &= ~(1 << PD4); // turn the sensor OFF
   *pin_34 (1 << 6);
@@ -117,12 +116,10 @@ void loop() {
   PORTD &= ~(1 << PD3);
   //water sensor
   PORTD |= (1 << PD4);  // turn the sensor ON
-  delay(10); 
   if(*pin_34 & (1 << 6)){
     value = analogRead(SIGNAL_PIN);
   } // read the analog value from sensor
   PORTD &= ~(1 << PD4);   // turn the sensor OFF
-  Serial.println(value);
   if (value > 220 ){
     PORTD |= (1 << PB5);
     PORTD &= ~(1 << PD6);
@@ -145,7 +142,7 @@ void loop() {
       lcd.print(h);
     }
   
-    //turn on/off fan motor when temperature changes (change values)
+    //turn on/off fan motor when temperature changes. analogWrite allowed per instructions
     if((f < 75 && f>50) && (value < 220)){
       analogWrite(5, 0);
       analogWrite(12, 255);
@@ -186,7 +183,7 @@ void loop() {
     printNumber(now.second());
     customPutchar('\n');
   
-    lastState = currentState;    // Update the last state to the current state
+    lastState = currentState;
   }
   
 
