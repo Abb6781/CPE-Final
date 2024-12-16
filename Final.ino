@@ -111,13 +111,12 @@ void setup() {
 
 void loop() {
   //interrupt
-  bool d = digitalRead(4);
-  Serial.println(d);
+  bool d = *pin_4 & (1 << 4);
   digitalWrite(ledPin, state);
   //water sensor
   digitalWrite(POWER_PIN, HIGH);  // turn the sensor ON
   delay(10); 
-  if(digitalRead(34)){
+  if(*pin_34 & (1 << 6)){
     value = analogRead(SIGNAL_PIN);
   } // read the analog value from sensor
   digitalWrite(POWER_PIN, LOW);   // turn the sensor OFF
