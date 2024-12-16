@@ -41,11 +41,46 @@ volatile byte state = LOW;
 #include <LiquidCrystal.h>
 const int RS = 22, EN = 24, D4 = 26, D5 = 28, D6 = 30, D7 = 32;
 LiquidCrystal lcd(RS,EN,D4,D5,D6,D7);
+
+volatile unsigned char* port_b = (unsigned char*) 0x25;
+volatile unsigned char* ddr_b  = (unsigned char*) 0x24;
+volatile unsigned char* port_d = (unsigned char*) 0x2B;
+volatile unsigned char* ddr_d  = (unsigned char*) 0x2A;
+volatile unsigned char* port_c = (unsigned char*) 0x28;
+volatile unsigned char* ddr_c  = (unsigned char*) 0x27;
+
+// Pin Definitions
+
+// Port D (Pins 2-7)
+volatile unsigned char* pin_2  = (unsigned char*) 0x2A;
+volatile unsigned char* pin_3  = (unsigned char*) 0x2B;
+volatile unsigned char* pin_4  = (unsigned char*) 0x2C;
+volatile unsigned char* pin_5  = (unsigned char*) 0x2D;
+volatile unsigned char* pin_6  = (unsigned char*) 0x2E;
+volatile unsigned char* pin_7  = (unsigned char*) 0x2F;
+
+// Port B (Pins 8-13)
+volatile unsigned char* pin_8  = (unsigned char*) 0x23;
+volatile unsigned char* pin_9  = (unsigned char*) 0x24;
+volatile unsigned char* pin_10 = (unsigned char*) 0x25;
+volatile unsigned char* pin_11 = (unsigned char*) 0x26;
+volatile unsigned char* pin_12 = (unsigned char*) 0x27;
+volatile unsigned char* pin_13 = (unsigned char*) 0x28;
+
+// Port C (Analog Pins 22-32 / PC0 - PC5)
+volatile unsigned char* pin_22 = (unsigned char*) 0x26;
+volatile unsigned char* pin_24 = (unsigned char*) 0x27;
+volatile unsigned char* pin_26 = (unsigned char*) 0x28;
+volatile unsigned char* pin_28 = (unsigned char*) 0x29;
+volatile unsigned char* pin_30 = (unsigned char*) 0x2A; 
+volatile unsigned char* pin_32 = (unsigned char*) 0x2B;
+volatile unsigned char* pin_34 = (unsigned char*) 0x2C;
+
 void setup() {
   Serial.begin(9600);
   //interrupt
-  pinMode(ledPin, OUTPUT);
-  pinMode(interruptPin, INPUT_PULLUP);
+  *ledPin |= (1 << 3);
+  *interruptPin |= (1 << 4);
   attachInterrupt(digitalPinToInterrupt(interruptPin),blink, CHANGE);
 
   // humidity/temp reader
@@ -55,12 +90,12 @@ void setup() {
   stepper.setSpeed(30);
   
   //fan motor, change before submitting
-  pinMode(5, OUTPUT);
+  *pin_5 |= (1 << 5);
 
   //water sensor, change
-  pinMode(POWER_PIN, OUTPUT);   // configure D7 pin as an OUTPUT
+  *POWER_PIN |= (1 << 7);   // configure D7 pin as an OUTPUT
   digitalWrite(POWER_PIN, LOW); // turn the sensor OFF
-  pinMode(34, INPUT);
+  *pin_34 (1 << 6);
   
   //Clock
   rtc.begin();
@@ -68,8 +103,8 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(6), cStep, RISING);
 
   //leds 
-  pinMode(12, OUTPUT); //green
-  pinMode(13, OUTPUT); //red
+  *pin_12 |= (1 << 4); //green
+  *pin_13 |= (1 << 5); //red
   //blue connected to pin 5. (only on when fan is on)
   //yellow connected to 3 (see interrupt)
 }
