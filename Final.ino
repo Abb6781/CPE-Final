@@ -115,11 +115,17 @@ void loop() {
   bool d = *pin_4 & (1 << 4);
   PORTD &= ~(1 << PD3);
   //water sensor
-  PORTD |= (1 << PD4);  // turn the sensor ON
+  PORTD |= (1 << PD4);
   if(*pin_34 & (1 << 6)){
-    value = analogRead(SIGNAL_PIN);
-  } // read the analog value from sensor
-  PORTD &= ~(1 << PD4);   // turn the sensor OFF
+    ADCSRA |= (1 << ADIF); 
+    ADMUX = (ADMUX & 0xF0) | (SIGNAL_PIN & 0x0F);
+    ADCSRA |= (1 << ADSC);
+    // Wait for the conversion to complete
+    while (ADCSRA & (1 << ADSC)) {
+    }
+    int value = ADC;
+  }
+  PORTD &= ~(1 << PD4);
   if (value > 220 ){
     PORTD |= (1 << PB5);
     PORTD &= ~(1 << PD6);
