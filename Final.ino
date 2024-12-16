@@ -5,7 +5,7 @@
 
 //press and hold button to rotate stepper motor to desired angle.
 
-//includes for temp/humidity. libraries included are allowed
+//includes for temp/humidity
 #include "DHT.h"
 #define DHTPIN 2
 #define DHTTYPE DHT11
@@ -14,18 +14,18 @@ DHT dht(DHTPIN, DHTTYPE);
 unsigned long previousMillis = 0;
 const long interval = 60000;
 
-//includes for stepper motor. libraries are allowed
+//includes for stepper motor
 #include <Stepper.h>
 #define STEPS 100
 Stepper stepper(STEPS, 8, 9, 10, 11);
 
 //includes for water sensor 
-#define POWER_PIN  7
+
 #define SIGNAL_PIN A5
 
 int value = 0; // variable to store the sensor value
 
-//includes for the clock. libraries allowed
+//includes for the clock
 #include <RTClib.h>
 RTC_DS3231 rtc;
 volatile int count = 0;
@@ -33,11 +33,13 @@ char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursd
 bool lastState = false;
 
 //includes for interrupt
-const byte ledPin = 3;
+
 const byte interruptPin = 4;
 volatile byte state = LOW;
 
-//includes for LCD. libraries used in prior lab
+
+
+//includes for LCD
 #include <LiquidCrystal.h>
 const int RS = 22, EN = 24, D4 = 26, D5 = 28, D6 = 30, D7 = 32;
 LiquidCrystal lcd(RS,EN,D4,D5,D6,D7);
@@ -77,8 +79,9 @@ volatile unsigned char* pin_32 = (unsigned char*) 0x2B;
 volatile unsigned char* pin_34 = (unsigned char*) 0x2C;
 
 void setup() {
+  Serial.begin(9600);
   //interrupt
-  *ledPin |= (1 << 3);
+  DDRD |= (1 << PD3); 
   *interruptPin |= (1 << 4);
   attachInterrupt(digitalPinToInterrupt(interruptPin),blink, CHANGE);
 
@@ -92,8 +95,8 @@ void setup() {
   *pin_5 |= (1 << 5);
 
   //water sensor, change
-  *POWER_PIN |= (1 << 7);   // configure D7 pin as an OUTPUT
-  digitalWrite(POWER_PIN, LOW); // turn the sensor OFF
+  DDRD |= (1 << PD4);// configure D7 pin as an OUTPUT
+  PORTD &= ~(1 << PD4); // turn the sensor OFF
   *pin_34 (1 << 6);
   
   //Clock
@@ -102,8 +105,8 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(6), cStep, RISING);
 
   //leds 
-  *pin_12 |= (1 << 4); //green
-  *pin_13 |= (1 << 5); //red
+  DDRD |= (1 << PD6);//green
+  DDRB |= (1 << PB5); //red
   //blue connected to pin 5. (only on when fan is on)
   //yellow connected to 3 (see interrupt)
 }
@@ -111,20 +114,22 @@ void setup() {
 void loop() {
   //interrupt
   bool d = *pin_4 & (1 << 4);
-  digitalWrite(ledPin, state);
+  PORTD &= ~(1 << PD3);
   //water sensor
-  digitalWrite(POWER_PIN, HIGH);  // turn the sensor ON 
+  PORTD |= (1 << PD4);  // turn the sensor ON
+  delay(10); 
   if(*pin_34 & (1 << 6)){
     value = analogRead(SIGNAL_PIN);
   } // read the analog value from sensor
-  digitalWrite(POWER_PIN, LOW);   // turn the sensor OFF
+  PORTD &= ~(1 << PD4);   // turn the sensor OFF
+  Serial.println(value);
   if (value > 220 ){
-    digitalWrite(13, HIGH);
-    digitalWrite(12, LOW);
+    PORTD |= (1 << PB5);
+    PORTD &= ~(1 << PD6);
     lcd.write("ERROR, LOW WATER");
   }else{
-    digitalWrite(13, LOW);
-    digitalWrite(12, HIGH);
+    PORTB &= ~(1 << PB5);
+    PORTD |= (1 << PD6);
   }
   // humidity/temp
   unsigned long currentMillis = millis();
